@@ -1,0 +1,32 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nagarjuna Degree College | Faculty Invigilation System</title>
+<link rel="icon" type="image/jpeg" href="{% static 'img/nagarjuna_logo.jpg' %}">
+<link rel="shortcut icon" type="image/jpeg" href="{% static 'img/nagarjuna_logo.jpg' %}">
+<link rel="apple-touch-icon" href="{% static 'img/nagarjuna_logo.jpg' %}">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow glow-a"></div><div class="bg-glow glow-b"></div><div class="bg-glow glow-c"></div>
+{% if user.is_authenticated %}
+<nav class="topbar glass">
+  <a class="brand" href="{% url 'dashboard' %}">
+    <img src="{% static 'img/nagarjuna_logo.jpg' %}" alt="Nagarjuna Degree College logo">
+    <div><strong>NAGARJUNA</strong><span>DEGREE COLLEGE</span></div>
+  </a>
+  <div class="top-actions"><span class="user-pill">{{ user.username }}</span><a href="{% url 'logout' %}">Logout</a></div>
+</nav>
+{% endif %}
+<main class="site-main">
+{% if messages %}
+  {% for message in messages %}<div class="toast {{ message.tags }}">{{ message }}</div>{% endfor %}
+{% endif %}
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

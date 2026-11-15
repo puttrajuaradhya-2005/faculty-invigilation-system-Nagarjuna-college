@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<section class="dashboard-hero glass">
+  <div class="hero-copy">
+    <div class="eyebrow">NAGARJUNA DEGREE COLLEGE</div>
+    <h1>Faculty Free-Slot<br><span>Invigilation Allocation</span></h1>
+    <p>Upload exactly three college files. The system converts the timetable into recurring faculty busy slots, converts exam Slot A–H into actual dates and times, reads rooms, and then allocates only conflict-free faculty.</p>
+    <div class="hero-badges"><span>AUTOMATIC IMPORT</span><span>MULTI-COLLEGE FORMATS</span><span>FAIR ALLOCATION</span><span>ABSENCE REALLOCATION</span></div>
+  </div>
+  <div class="hero-3d"><div class="logo-stage"><img src="{% static 'img/nagarjuna_logo.jpg' %}" alt="Nagarjuna Degree College logo"></div><div class="university-3d">NAGARJUNA</div><div class="campus-3d">DEGREE COLLEGE</div></div>
+</section>
+
+<div class="stats">
+  <div class="stat glass"><span>👨‍🏫</span><b>{{ faculty_count }}</b><small>FACULTY</small></div>
+  <div class="stat glass"><span>⏱</span><b>{{ slot_count }}</b><small>BUSY SLOTS</small></div>
+  <div class="stat glass"><span>📝</span><b>{{ exam_count }}</b><small>EXAM SLOTS</small></div>
+  <div class="stat glass"><span>🏫</span><b>{{ room_count }}</b><small>ROOM RECORDS</small></div>
+  <div class="stat glass"><span>✓</span><b>{{ duty_count }}</b><small>DUTIES</small></div>
+</div>
+
+<section class="panel glass">
+  <div class="section-title"><div><div class="step">01</div><h2>Upload the 3 Input Files</h2><p class="muted">Supports any college layout (row-wise, column-wise, period-wise, or slot-wise) in PDF, Excel, Word, or CSV.</p></div></div>
+  <form action="{% url 'upload' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="upload-grid upload-grid-3">
+      <label class="upload-card"><div class="upload-icon">👨‍🏫</div><strong>Faculty Timetable</strong><span>Weekly faculty timetable — PDF / Excel / Word / CSV</span><input required multiple type="file" name="faculty_file" accept=".pdf,.xlsx,.xls,.docx,.csv"><em class="file-name">Choose file</em></label>
+      <label class="upload-card"><div class="upload-icon">📝</div><strong>Exam Timetable</strong><span>CA / semester examination schedule — PDF / Excel / Word / CSV</span><input required multiple type="file" name="exam_file" accept=".pdf,.xlsx,.xls,.docx,.csv"><em class="file-name">Choose file</em></label>
+      <label class="upload-card"><div class="upload-icon">🏫</div><strong>Room Details</strong><span>Available examination rooms — PDF / Excel / Word / CSV</span><input required multiple type="file" name="room_file" accept=".pdf,.xlsx,.xls,.docx,.csv"><em class="file-name">Choose file</em></label>
+    </div>
+    <button class="btn primary" type="submit">⚡ UPLOAD + PROCESS AUTOMATICALLY</button>
+  </form>
+</section>
+
+{% if process_log %}
+<section class="panel glass"><div class="step">02</div><h2>Automatic Processing Result</h2><div class="process-grid">{% for x in process_log %}<div class="process-item">✓ {{ x }}</div>{% endfor %}</div></section>
+{% endif %}
+
+{% if exams %}
+<section class="panel glass"><div class="step">03</div><h2>Imported Exam Slots</h2><p class="muted">These are the actual exam slots created from the uploaded exam timetable.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Day</th><th>Slot</th><th>Time</th><th>Course</th></tr></thead><tbody>{% for e in exams %}<tr><td>{{ e.date }}</td><td>{{ e.date|date:"l" }}</td><td><span class="badge">{{ e.slot }}</span></td><td>{{ e.start_time }} – {{ e.end_time }}</td><td>{{ e.course }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endif %}
+
+{% if previews %}<section class="panel glass"><div class="step">04</div><h2>Source Extraction Preview</h2>{% for p in previews %}<details class="preview"><summary>{{ p.filename }} — {{ p.characters }} characters</summary><pre>{{ p.preview }}</pre></details>{% endfor %}</section>{% endif %}
+
+<section class="panel glass allocation-panel">
+  <div><div class="step">05</div><h2>Generate Invigilation Duties</h2><p class="muted">For every exam room, the allocator checks the faculty member's recurring weekday timetable and balances duties equally across all available faculty.</p></div>
+  <div class="action-row"><form action="{% url 'allocate' %}" method="post">{% csrf_token %}<button class="btn primary" type="submit" {% if not exam_count or not faculty_count or not room_count %}disabled{% endif %}>⚙ GENERATE DUTIES</button></form><a class="btn secondary" href="{% url 'export' %}">↓ EXPORT CSV</a></div>
+</section>
+
+{% if warnings %}<section class="panel glass warning-panel"><h2>⚠ Extraction Alerts</h2>{% for warning in warnings %}<div class="warning">{{ warning }}</div>{% endfor %}</section>{% endif %}
+
+<section class="panel glass">
+  <div class="section-head" style="flex-wrap:wrap;gap:14px;">
+    <div>
+      <div class="step">06</div>
+      <h2>Faculty Duty Allocation Count &amp; Extra Faculty</h2>
+      <p class="muted">Live duty count per lecturer. Add extra faculty/relievers below if additional staff are needed.</p>
+    </div>
+    <form action="{% url 'add_faculty' %}" method="post" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      {% csrf_token %}
+      <input type="text" name="faculty_name" placeholder="Extra Faculty Name" required style="padding:11px 14px;border-radius:12px;border:1px solid rgba(104,191,255,.28);background:rgba(255,255,255,.06);color:#fff;">
+      <input type="text" name="department" placeholder="Department (optional)" style="padding:11px 14px;border-radius:12px;border:1px solid rgba(104,191,255,.28);background:rgba(255,255,255,.06);color:#fff;">
+      <button type="submit" class="btn primary">+ Add Extra Faculty</button>
+    </form>
+  </div>
+  {% if faculty_summary %}
+  <div class="process-grid">
+    {% for f in faculty_summary %}
+    <div class="process-item" style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <strong>{{ f.name }}</strong>
+        {% if f.department %}<div style="font-size:11px;color:#9fb2ca;">{{ f.department }}</div>{% endif %}
+      </div>
+      <span class="badge">{{ f.duty_total }} {% if f.duty_total == 1 %}Duty{% else %}Duties{% endif %}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section class="panel glass">
+  <div class="section-head">
+    <div><div class="step">07</div><h2>Final Allocated Duties</h2></div>
+    <form action="{% url 'clear' %}" method="post">{% csrf_token %}<button class="btn danger">CLEAR DATA</button></form>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Slot</th>
+          <th>Time</th>
+          <th>Course</th>
+          <th>Room</th>
+          <th>Faculty (Total Duties)</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in duties %}
+        <tr>
+          <td>{{ d.exam.date }}</td>
+          <td>{{ d.exam.slot }}</td>
+          <td>{{ d.exam.start_time }} – {{ d.exam.end_time }}</td>
+          <td>{{ d.exam.course }}</td>
+          <td>{{ d.room.room_number }}</td>
+          <td>
+            <strong>{{ d.faculty.name }}</strong>
+            <span class="badge" style="margin-left:6px;">{{ d.faculty.active_duty_count }}</span>
+            {% if d.replaced_faculty %}
+              <div style="font-size:11px;color:#ffdd77;margin-top:4px;">Replaced: {{ d.replaced_faculty.name }}</div>
+            {% endif %}
+          </td>
+          <td><span class="badge">{{ d.status }}</span></td>
+          <td>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <details>
+                <summary class="btn secondary" style="padding:7px 12px;font-size:12px;list-style:none;">✎ Edit</summary>
+                <form action="{% url 'edit_duty' d.id %}" method="post" style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+                  {% csrf_token %}
+                  <select name="faculty_id" style="padding:7px 10px;border-radius:8px;background:#0a1b36;color:#fff;border:1px solid rgba(106,191,255,.3);">
+                    {% for f in all_faculty %}
+                      <option value="{{ f.id }}" {% if f.id == d.faculty.id %}selected{% endif %}>{{ f.name }} ({{ f.active_duty_count }})</option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="btn primary" style="padding:7px 12px;font-size:12px;">Save</button>
+                </form>
+              </details>
+              <form action="{% url 'absent_reallocate' d.id %}" method="post" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="btn danger" style="padding:7px 12px;font-size:12px;" title="Mark absent and automatically find an available replacement with lower workload">
+                  Faculty Absent &rarr; Reallocate
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="empty">No duties generated yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.upload-card input[type=file]').forEach(function(input){input.addEventListener('change',function(){this.parentElement.querySelector('.file-name').textContent=this.files.length>1?(this.files.length+' files selected'):(this.files[0]?this.files[0].name:'Choose file');});});
+</script>
+{% endblock %}

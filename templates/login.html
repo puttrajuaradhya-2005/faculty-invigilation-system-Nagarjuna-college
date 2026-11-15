@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="login-page">
+  <div class="campus-orbit orbit-1"></div><div class="campus-orbit orbit-2"></div>
+  <section class="login-branding">
+    <div class="brand-logo-wrap"><img src="{% static 'img/nagarjuna_logo.jpg' %}" alt="Nagarjuna Degree College"></div>
+    <div class="three-d-title">NAGARJUNA <span>DEGREE COLLEGE</span></div>
+
+    <p class="brand-line">FACULTY FREE-SLOT BASED INVIGILATION DUTY ALLOCATION</p>
+    <div class="feature-row">
+      <div><b>01</b><span>FREE FACULTY</span></div><div><b>02</b><span>SMART ALLOCATION</span></div><div><b>03</b><span>NO CONFLICTS</span></div>
+    </div>
+  </section>
+  <section class="login-card glass">
+    <div class="mini-logo"><img src="{% static 'img/nagarjuna_logo.jpg' %}" alt="Nagarjuna Degree College"></div>
+    <div class="eyebrow">NAGARJUNA DEGREE COLLEGE</div>
+    <h1>Faculty Invigilation<br><span>Management System</span></h1>
+    <p class="muted">Secure login to access the smart examination dashboard.</p>
+    <form method="post" class="login-form">
+      {% csrf_token %}
+      <label>Username</label>
+      <input type="text" name="username" placeholder="Enter username" required autofocus>
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter password" required>
+      <button type="submit" class="login-btn">LOGIN <span>→</span></button>
+    </form>
+    <div class="login-footer">EXCELLENCE &nbsp;•&nbsp; INNOVATION &nbsp;•&nbsp; INTEGRITY</div>
+  </section>
+</div>
+{% endblock %}
