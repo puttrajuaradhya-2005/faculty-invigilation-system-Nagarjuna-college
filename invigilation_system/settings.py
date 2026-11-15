@@ -65,3 +65,5 @@ import os
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+ALLOWED_HOSTS = ['faculty-invigilation-system-nagarjuna-1x33.onrender.com', 'localhost', '127.0.0.1']
